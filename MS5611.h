@@ -13,7 +13,7 @@
 #include "i2c.h"
 
 void MS5611_Init(void);
-float MS5611_GetTemp(int osr);
+float MS5611_GetTemperature(int osr);
 float MS5611_GetPressure(int osr);
 
 #endif /* INC_MS5611_H_ */
