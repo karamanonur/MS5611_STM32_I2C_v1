@@ -40,13 +40,13 @@ static uint32_t D1 = 0;	// Digital pressure value
 static uint32_t D2 = 0;	// Digital temperature value
 
 /* Variables to calculate actual temperature */
-static int32_t dT   = 0;	// Difference between actual and reference temperature
-static int32_t TEMP = 0;	// Actual temperature
+static int32_t dT   = 0; // Difference between actual and reference temperature
+static int32_t TEMP = 0; // Actual temperature
 
 /* Variables to calculate temperature compensated pressure */
-static int64_t OFF  = 0;	// Offset at actual temperature
-static int64_t SENS = 0;	// Sensitivity at actual temperature
-static int64_t P    = 0;	// Temperature compensated pressure
+static int64_t OFF  = 0; // Offset at actual temperature
+static int64_t SENS = 0; // Sensitivity at actual temperature
+static int64_t P    = 0; // Temperature compensated pressure
 
 /* Reset function */
 static void MS5611_Reset(void)
@@ -164,32 +164,47 @@ static void MS5611_ReadDigitalValues(int osr)
 	}
 }
 
+static void MS5611_DoCalculations(void)
+{
+	/* For dT, OFF, and SENS max and min values should be defined */
+	dT = D2 - (C5 * pow(2,8));
+	if(dT < -16776960) dT = -16776960;
+	if(dT > 16777216) dT = 16777216;
+
+	TEMP = 2000 + (dT * C6 /pow(2,26));
+
+	OFF = (C2 * pow(2,16)) + ((C4 * dT) / pow(2,7));
+	if(OFF < -8589672450) OFF = -8589672450;
+	if(OFF > 12884705280) OFF = 12884705280;
+
+	SENS = (C1 * pow(2,15)) + ((C3 * dT) / pow(2,8));
+	if(SENS < -4294836225) SENS = -4294836225;
+	if(SENS > 6442352640) SENS = 6442352640;
+
+	P = ((D1 * SENS / pow(2,21) - OFF)/ pow(2,15));
+}
+
 /* Function to get actual pressure value */
 float MS5611_GetPressure(int osr)
 {
 	float actualPressure = 0;
 
 	MS5611_ReadDigitalValues(osr);
+	MS5611_DoCalculations();
 
-	OFF = (C2 * pow(2,16)) + ((C4 * dT) / pow(2,7));
-	SENS = (C1 * pow(2,15)) + ((C3 * dT) / pow(2,8));
-	P = ((D1 * SENS / pow(2,21) - OFF)/ pow(2,15));
 	actualPressure = P / 100.00;
-
 	return actualPressure;
 }
 
 /* Function to get actual temperature value */
-float MS5611_GetTemp(int osr)
+float MS5611_GetTemperature(int osr)
 {
 	float actualTemperature = 0;
 
 	MS5611_ReadDigitalValues(osr);
+	MS5611_DoCalculations();
 
-	dT = D2 - (C5 * pow(2,8));
-	TEMP = 2000 + (dT * C6 /pow(2,26));
 	actualTemperature = TEMP / 100.00;
-
 	return actualTemperature;
 }
 
