@@ -160,6 +160,17 @@ static void MS5611_ReadDigitalValues(int osr)
 		D2 = ((digitalTempBuff[0] << 16) | (digitalTempBuff[1] << 8) | (digitalTempBuff[2]));
 		break;
 	default:
+		HAL_I2C_Master_Transmit(&hi2c1, (MS5611_DEVICE_ADDR<<1), &D1_OSR_1024, 1, 10);
+		HAL_Delay(50);
+		HAL_I2C_Master_Transmit(&hi2c1, (MS5611_DEVICE_ADDR<<1), &ADC_READ, 1, 10);
+		HAL_I2C_Master_Receive(&hi2c1, (uint16_t)((MS5611_DEVICE_ADDR<<1)|0x01), digitalPressureBuff, 3, 10);
+		D1 = ((digitalPressureBuff[0] << 16) | (digitalPressureBuff[1] << 8) | (digitalPressureBuff[2]));
+
+		HAL_I2C_Master_Transmit(&hi2c1, (MS5611_DEVICE_ADDR<<1), &D2_OSR_1024, 1, 10);
+		HAL_Delay(50);
+		HAL_I2C_Master_Transmit(&hi2c1, (MS5611_DEVICE_ADDR<<1), &ADC_READ, 1, 10);
+		HAL_I2C_Master_Receive(&hi2c1, (uint16_t)((MS5611_DEVICE_ADDR<<1)|0x01), digitalTempBuff, 3, 10);
+		D2 = ((digitalTempBuff[0] << 16) | (digitalTempBuff[1] << 8) | (digitalTempBuff[2]));
 		break;
 	}
 }
